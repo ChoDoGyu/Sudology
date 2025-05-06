@@ -30,20 +30,20 @@ Android 플랫폼 기준으로 설계되었으며, GitHub 포트폴리오용으�
 
 ## 📁 프로젝트 구조
 
-Assets/
-├── Scripts/
-│ ├── GameManager.cs
-│ ├── UIManager.cs
-│ ├── PuzzleManager.cs
-│ ├── InputManager.cs
-│ └── AudioManager.cs
-├── Prefabs/
-│ └── PuzzleCell.prefab
-├── Resources/
-├── Scenes/
-│ ├── StartScene.unity
-│ └── GameScene.unity
-└── Audio/
+- Assets/
+- ├── Scripts/
+- │ ├── GameManager.cs
+- │ ├── UIManager.cs
+- │ ├── PuzzleManager.cs
+- │ ├── InputManager.cs
+- │ └── AudioManager.cs
+- ├── Prefabs/
+- │ └── PuzzleCell.prefab
+- ├── Resources/
+- ├── Scenes/
+- │ ├── StartScene.unity
+- │ └── GameScene.unity
+- └── Audio/
 
 ---
 
