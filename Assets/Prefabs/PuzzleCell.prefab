@@ -51,6 +51,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isFixed: 0
   cellText: {fileID: 0}
+  correctValue: 0
 --- !u!1 &1266758778861336285
 GameObject:
   m_ObjectHideFlags: 0
@@ -143,8 +144,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
-  m_fontSizeBase: 24
+  m_fontSize: 36
+  m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18

@@ -1,64 +1,62 @@
 # 🧩 Sudology
 
-**7일 만에 1인 개발로 만든 Unity 2D 스도쿠 퍼즐 게임**입니다.  
-Android 플랫폼 기준으로 설계되었으며, GitHub 포트폴리오용으로 제작되었습니다.
+**7일 만에 1인 개발로 만든 Unity 2D 스도쿠 퍼즐 게임**  
+Android/Portrait 모드용으로 설계되었으며, GitHub 포트트폴리오용으로 제작되었습니다.
 
 ---
 
 ## 🎮 주요 기능
 
-- 9x9 스도쿠 퍼즐 생성기
-- 난이도 선택 (쉬움 / 보통 / 어려움)
-- 정답 채점 기능 (오답 표시)
-- 힌트 기능 (광고 없이, 퍼즐당 3회 제한)
-- Undo / Redo 기능 (최대 3회)
-- 입력 기록 저장 및 복원 (앱 종료 후 재시작)
-- 난이도별 통계 저장
-- 배너 광고 (Unity Ads)
-
----
-
-## 🧱 개발 환경
-
-- Unity 2022.3.42f1 LTS
-- C#
-- Visual Studio 2022
-- GitHub Desktop
-- Android 플랫폼 (Portrait UI)
+- 9×9 스도쿠 퍼즐 자동 생성 (백트래킹 + 유일 해답 보장)  
+- 난이도 선택 (Easy / Normal / Hard)  
+- 숫자 입력 & 셀 선택 하이라이트  
+- 채점 기능 (오답 빨강 하이라이트)  
+- 힌트 기능 (광고 없이, 퍼즐당 3회)  
+- Undo / Redo (최대 3단계)  
+- 입력 상태 저장·복원 (앱 재실행/씬 재진입)  
+- 배너 광고 지원 (Unity Ads)
 
 ---
 
 ## 📁 프로젝트 구조
 
-- Assets/
-  - Scripts/
-    - Difficulty.cs
-    - DifficultySelector.cs
-    - GameManager.cs
-    - IPuzzleGenerator.cs
-    - PuzzleGenerator.cs
-    - PuzzleCell.cs
-    - UIManager.cs
-    - InputManager.cs
-    - AudioManager.cs
-  - Prefabs/
-    - PuzzleCell.prefab
-  - Resources/
-  - Scenes/
-    - StartScene.unity
-    - GameScene.unity
-  - Audio/
+```
+Assets/
+└── Scripts/
+    ├── Core/                  
+    │   ├── GameManager.cs
+    │   ├── SaveManager.cs
+    │   ├── IPuzzleGenerator.cs
+    │   └── Difficulty.cs
+    │   
+    ├── Generators/            
+    │   └── PuzzleGenerator.cs
+    │   
+    ├── Cells/                 
+    │   └── PuzzleCell.cs
+    │   
+    └── UI/                    
+        ├── InputManager.cs
+        ├── PuzzleManager.cs
+        ├── HintManager.cs
+        └── DifficultySelector.cs
+```
 
 ---
 
-## 💡 기획 배경
+## 📅 개발 일정 및 진행 현황
 
-- Unity 2D 기초를 연습하고
-- 기능 중심의 퍼즐 게임 구조를 학습하며
-- Google Play Store 출시까지 진행 가능한 최소 기능(MVP) 게임을 구현하는 것이 목표였습니다.
-
-- ## 📷 스크린샷
-
-> (게임 실행 화면이 있다면 여기에 이미지 추가)
+| Day       | 주요 작업                                                   |
+|-----------|-------------------------------------------------------------|
+| **Day 1** | 프로젝트 초기 설정, UI 프리팹 구성, GitHub 커밋            |
+| **Day 2** | 퍼즐 생성기 구현, 문제 셀 잠금, SOLID 구조 적용, 난이도 선택 연동 |
+| **Day 3** | 숫자 입력 & 셀 선택, 채점 기능, 힌트, Undo/Redo, 입력 상태 저장·복원 |
 
 ---
+
+## 💡 향후 개선
+
+- Google Play 출시 준비 (아이콘, 스토어 등록)  
+- 광고 최적화 & 수익화  
+- 통계 및 리더보드 추가  
+- UI/UX 디테일 업그레이드
