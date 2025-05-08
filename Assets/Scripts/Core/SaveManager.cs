@@ -43,13 +43,18 @@ public class SaveManager : MonoBehaviour
         PlayerPrefs.Save();
     }
 
-
     // 불러오기: 저장된 JSON이 없으면 null 반환
     public BoardState LoadState()
     {
         if (!PlayerPrefs.HasKey(SaveKey)) return null;
         string json = PlayerPrefs.GetString(SaveKey);
         return JsonUtility.FromJson<BoardState>(json);
+    }
+
+    // 저장된 데이터가 있는지 빠르게 확인
+    public bool HasSave()
+    {
+        return PlayerPrefs.HasKey(SaveKey);
     }
 
     // 초기화

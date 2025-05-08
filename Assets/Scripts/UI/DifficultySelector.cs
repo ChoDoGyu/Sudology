@@ -5,21 +5,19 @@ using UnityEngine.SceneManagement;
 
 public class DifficultySelector : MonoBehaviour
 {
-    public void SelectEasy()
-    {
-        GameManager.Instance.SetDifficulty(Difficulty.Easy);
-        SceneManager.LoadScene("GameScene");
-    }
+    public void SelectEasy() => StartNewGame(Difficulty.Easy);
+    public void SelectNormal() => StartNewGame(Difficulty.Normal);
+    public void SelectHard() => StartNewGame(Difficulty.Hard);
 
-    public void SelectNormal()
+    private void StartNewGame(Difficulty diff)
     {
-        GameManager.Instance.SetDifficulty(Difficulty.Normal);
-        SceneManager.LoadScene("GameScene");
-    }
+        //이전 저장 삭제
+        SaveManager.Instance.ClearState();
 
-    public void SelectHard()
-    {
-        GameManager.Instance.SetDifficulty(Difficulty.Hard);
+        //새 난이도 설정
+        GameManager.Instance.SetDifficulty(diff);
+
+        //게임 씬으로 이동
         SceneManager.LoadScene("GameScene");
     }
 }

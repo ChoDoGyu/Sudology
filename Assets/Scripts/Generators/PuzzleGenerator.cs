@@ -1,44 +1,50 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Linq;
 using TMPro;
 
+// PuzzleGenerator 클래스는 IPuzzleGenerator를 구현하며
+// 난이도에 따른 퍼즐 생성과 유일 해답 보장을 수행합니다.
 public class PuzzleGenerator : MonoBehaviour, IPuzzleGenerator
 {
-    [Header("References")]
-    public GameObject puzzleCellPrefab;  // PuzzleCell 프리팹
-    public RectTransform boardRect;      // PuzzleBoard RectTransform
-    public GridLayoutGroup gridLayout;   // GridLayoutGroup 컴포넌트 참조
+    [Header("퍼즐 참조 설정")]
+    public GameObject puzzleCellPrefab;    // PuzzleCell 프리팹
+    public RectTransform boardRect;        // PuzzleBoard RectTransform
+    public GridLayoutGroup gridLayout;     // GridLayoutGroup 컴포넌트
 
-    private const int GridSize = 9; // 9x9 퍼즐
+    private const int GridSize = 9;        // 9x9 퍼즐 고정 크기
 
-
-    public void Generate(Transform parent, int gridSize)
+    /// <summary>
+    /// 난이도에 따라 퍼즐을 생성하는 기본 메서드
+    /// </summary>
+    public void Generate(Transform parent, int gridSize, Difficulty difficulty)
     {
+        // 셀 크기 조정
         ResizeCells();
 
         // 1) 완전 해답 보드 생성
         int[,] solution = GenerateFullSolution(gridSize);
 
-        // 2) 난이도별 클루(빈칸) 마스크 생성 (유일 해답 보장)
-        bool[,] mask = GenerateClueMask(solution, GameManager.Instance.difficulty);
+        // 2) 난이도 기반으로 힌트(고정 셀) 마스크 생성
+        bool[,] mask = GenerateClueMask(solution, difficulty);
 
-        // 3) 셀 생성 및 초기화
+        // 3) PuzzleCell 인스턴스 생성 및 초기화
         for (int y = 0; y < gridSize; y++)
         {
             for (int x = 0; x < gridSize; x++)
             {
                 GameObject newCell = Instantiate(puzzleCellPrefab, parent);
                 newCell.name = $"PuzzleCell_{x}_{y}";
-                var cellComp = newCell.GetComponent<PuzzleCell>();
+                PuzzleCell cellComp = newCell.GetComponent<PuzzleCell>();
                 int answer = solution[y, x];
-                cellComp.correctValue = answer;
+
+                cellComp.correctValue = answer;  // 정답 값 설정
 
                 if (mask[y, x])
                 {
-                    // 문제 셀(고정)
+                    // 고정된 힌트 셀
                     cellComp.isFixed = true;
                     cellComp.cellText.text = answer.ToString();
                     cellComp.cellText.fontStyle = FontStyles.Bold;
@@ -46,30 +52,44 @@ public class PuzzleGenerator : MonoBehaviour, IPuzzleGenerator
                 }
                 else
                 {
-                    // 빈칸
+                    // 빈 칸
                     cellComp.isFixed = false;
-                    cellComp.cellText.text = "";
+                    cellComp.cellText.text = string.Empty;
                     cellComp.cellText.fontStyle = FontStyles.Normal;
                 }
             }
         }
     }
 
+    /// <summary>
+    /// 기존 호출 호환을 위한 메서드 오버로드
+    /// </summary>
+    public void Generate(Transform parent, int gridSize)
+    {
+        // 저장된 GameManager 난이도를 사용
+        Generate(parent, gridSize, GameManager.Instance.difficulty);
+    }
+
+    /// <summary>
+    /// 퍼즐 보드 크기에 맞춰 셀 크기 조정
+    /// </summary>
     private void ResizeCells()
     {
         float boardW = boardRect.rect.width;
         float boardH = boardRect.rect.height;
-        float spacingX = gridLayout.spacing.x;
-        float spacingY = gridLayout.spacing.y;
+        float spaceX = gridLayout.spacing.x;
+        float spaceY = gridLayout.spacing.y;
 
-        float cellW = (boardW - spacingX * (GridSize - 1)) / GridSize;
-        float cellH = (boardH - spacingY * (GridSize - 1)) / GridSize;
+        float cellW = (boardW - spaceX * (GridSize - 1)) / GridSize;
+        float cellH = (boardH - spaceY * (GridSize - 1)) / GridSize;
         float cellSize = Mathf.Min(cellW, cellH);
 
         gridLayout.cellSize = new Vector2(cellSize, cellSize);
     }
 
-    // 1) 백트래킹으로 완전 해답 보드 생성
+    /// <summary>
+    /// 백트래킹 방식으로 완전 해답 보드 생성
+    /// </summary>
     private int[,] GenerateFullSolution(int n)
     {
         int[,] board = new int[n, n];
@@ -84,7 +104,7 @@ public class PuzzleGenerator : MonoBehaviour, IPuzzleGenerator
         int nextC = (col + 1) % GridSize;
 
         // 1~9를 랜덤 순서로 시도
-        var nums = Enumerable.Range(1, GridSize).OrderBy(_ => Random.value).ToList();
+        var nums = Enumerable.Range(1, GridSize).OrderBy(_ => UnityEngine.Random.value).ToList();
         foreach (int num in nums)
         {
             if (CanPlace(board, row, col, num))
@@ -97,14 +117,19 @@ public class PuzzleGenerator : MonoBehaviour, IPuzzleGenerator
         return false;
     }
 
+    /// <summary>
+    /// 특정 위치에 숫자를 놓을 수 있는지 검사
+    /// </summary>
     private bool CanPlace(int[,] board, int row, int col, int num)
     {
-        // 행/열 체크
+        // 같은 행과 열 체크
         for (int i = 0; i < GridSize; i++)
             if (board[row, i] == num || board[i, col] == num)
                 return false;
+
         // 3x3 박스 체크
-        int boxR = (row / 3) * 3, boxC = (col / 3) * 3;
+        int boxR = (row / 3) * 3;
+        int boxC = (col / 3) * 3;
         for (int r = 0; r < 3; r++)
             for (int c = 0; c < 3; c++)
                 if (board[boxR + r, boxC + c] == num)
@@ -112,25 +137,24 @@ public class PuzzleGenerator : MonoBehaviour, IPuzzleGenerator
         return true;
     }
 
-    // 2) 난이도별 클루 마스크 생성 (유일 해답 보장)
+    /// <summary>
+    /// 주어진 난이도에 맞게 힌트 마스크(고정 셀) 생성, 유일 해답 보장
+    /// </summary>
     private bool[,] GenerateClueMask(int[,] solution, Difficulty diff)
     {
         int n = GridSize;
         int clues = diff == Difficulty.Easy ? 40 :
                     diff == Difficulty.Normal ? 30 : 20;
 
-        // 1) 모든 칸을 가려둔 상태로 시작
+        // 1) 해답 복사
         int[,] puzzle = solution.Clone() as int[,];
-        for (int r = 0; r < n; r++)
-            for (int c = 0; c < n; c++)
-                puzzle[r, c] = solution[r, c];
 
-        // 2) 칸 제거 리스트를 랜덤 순서로 준비
+        // 2) 셀 좌표 리스트를 랜덤 섞기
         var positions = new List<(int r, int c)>();
         for (int r = 0; r < n; r++)
             for (int c = 0; c < n; c++)
                 positions.Add((r, c));
-        positions = positions.OrderBy(_ => Random.value).ToList();
+        positions = positions.OrderBy(_ => UnityEngine.Random.value).ToList();
 
         int removed = 0;
         foreach (var (r, c) in positions)
@@ -138,12 +162,9 @@ public class PuzzleGenerator : MonoBehaviour, IPuzzleGenerator
             int backup = puzzle[r, c];
             puzzle[r, c] = 0;
 
-            // 유일 해답인지 검사 (2개 이상이면 false)
+            // 유일 해답인지 확인
             if (CountSolutions(puzzle, 2) != 1)
-            {
-                // 유일성이 깨지면 복원
                 puzzle[r, c] = backup;
-            }
             else
             {
                 removed++;
@@ -151,7 +172,7 @@ public class PuzzleGenerator : MonoBehaviour, IPuzzleGenerator
             }
         }
 
-        // 3) mask 반환 (true=문제 셀)
+        // 3) 마스크 생성 (true = 고정 셀)
         bool[,] mask = new bool[n, n];
         for (int r = 0; r < n; r++)
             for (int c = 0; c < n; c++)
@@ -159,7 +180,9 @@ public class PuzzleGenerator : MonoBehaviour, IPuzzleGenerator
         return mask;
     }
 
-    // 보드에서 해답 개수를 세고, limit 이상이면 조기 종료
+    /// <summary>
+    /// 제한 횟수까지 해답 개수 세기
+    /// </summary>
     private int CountSolutions(int[,] board, int limit)
     {
         int count = 0;
@@ -169,7 +192,7 @@ public class PuzzleGenerator : MonoBehaviour, IPuzzleGenerator
 
     private void SolveCount(int[,] board, int row, int col, ref int count, int limit)
     {
-        if (count >= limit) return;  // limit 이상이면 조기 종료
+        if (count >= limit) return;    // limit 이상이면 종료
         if (row == GridSize)
         {
             count++;

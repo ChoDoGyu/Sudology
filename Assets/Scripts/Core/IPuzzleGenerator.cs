@@ -4,6 +4,5 @@ using UnityEngine;
 
 public interface IPuzzleGenerator
 {
-    // 보드 크기(GridSize), 부모 Transform을 받아 퍼즐을 생성
-    void Generate(Transform parent, int gridSize);
+    void Generate(Transform parent, int gridSize, Difficulty difficulty);
 }
