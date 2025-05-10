@@ -96,4 +96,20 @@ public class GameManager : MonoBehaviour
             SaveManager.Instance.ClearState();
         }
     }
+
+    /// <summary>
+    /// Continue 버튼에서 호출됩니다.
+    /// 저장된 게임이 없으면 경고만 띄우고, 있으면 GameScene으로 전환합니다.
+    /// </summary>
+    public void StartContinueGame()
+    {
+        if (!SaveManager.Instance.HasSave())
+        {
+            Debug.LogWarning("저장된 게임이 없습니다!");
+            return;
+        }
+
+        // GameScene 로드 → OnSceneLoaded 콜백에서 퍼즐 & 상태 동기화가 일어납니다.
+        SceneManager.LoadScene("GameScene");
+    }
 }
