@@ -16,6 +16,8 @@ public class PuzzleGenerator : MonoBehaviour, IPuzzleGenerator
 
     private const int GridSize = 9;        // 9x9 퍼즐 고정 크기
 
+    private int[,] corrects = new int[9, 9];  // 정답 배열
+
     /// <summary>
     /// 난이도에 따라 퍼즐을 생성하는 기본 메서드
     /// </summary>
@@ -29,6 +31,7 @@ public class PuzzleGenerator : MonoBehaviour, IPuzzleGenerator
 
         // 2) 난이도 기반으로 힌트(고정 셀) 마스크 생성
         bool[,] mask = GenerateClueMask(solution, difficulty);
+
 
         // 3) PuzzleCell 인스턴스 생성 및 초기화
         for (int y = 0; y < gridSize; y++)
@@ -59,6 +62,19 @@ public class PuzzleGenerator : MonoBehaviour, IPuzzleGenerator
                 }
             }
         }
+
+
+        //정답 배열에 복사
+        for (int y = 0; y < gridSize; y++)
+            for (int x = 0; x < gridSize; x++)
+                corrects[y, x] = solution[y, x];
+
+    }
+
+    //정답 배열 반환 (GameManager에서 저장용으로 사용)
+    public int[,] GetCorrectValues()
+    {
+        return corrects;
     }
 
     /// <summary>

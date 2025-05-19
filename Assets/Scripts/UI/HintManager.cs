@@ -33,6 +33,8 @@ public class HintManager : MonoBehaviour
         cell.isFixed = true;         // 더 이상 수정 불가
         hintsUsed++;
 
+        GameManager.Instance.currentHintCount++;
+
         Debug.Log($"힌트 사용 {hintsUsed}/{maxHintsPerPuzzle}");
     }
 }

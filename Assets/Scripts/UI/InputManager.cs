@@ -63,6 +63,15 @@ public class InputManager : MonoBehaviour
         SaveCurrentState();
 
         Debug.Log($"Cell {selectedCell.name}에 {number} 입력");
+
+        //퍼즐 완료 여부 검사 추가
+        StartCoroutine(DelayedCheck());
+    }
+
+    private IEnumerator DelayedCheck()
+    {
+        yield return null;  // 1프레임 대기
+        PuzzleValidator.Instance?.CheckIfPuzzleCompleted();
     }
 
     // Undo 기능
@@ -113,22 +122,37 @@ public class InputManager : MonoBehaviour
     }
 
     // 현재 보드 상태를 SaveManager에 저장
-    private void SaveCurrentState()
+    public void SaveCurrentState()
     {
-        var cells = FindObjectsOfType<PuzzleCell>();
+        var board = GameObject.Find("PuzzleBoard");
+        var cells = board.GetComponentsInChildren<PuzzleCell>();
+
+        // 이름순 정렬
+        cells = cells.OrderBy(cell => cell.name).ToArray();
+
         int[,] values = new int[9, 9];
         bool[,] fixeds = new bool[9, 9];
+        int[,] corrects = new int[9, 9];
 
         for (int i = 0; i < cells.Length; i++)
         {
             int r = i / 9, c = i % 9;
-            values[r, c] =
-                string.IsNullOrEmpty(cells[i].cellText.text)
-                    ? 0
-                    : int.Parse(cells[i].cellText.text);
+            values[r, c] = string.IsNullOrEmpty(cells[i].cellText.text) ? 0 : int.Parse(cells[i].cellText.text);
             fixeds[r, c] = cells[i].isFixed;
+            corrects[r, c] = cells[i].correctValue;
         }
 
-        SaveManager.Instance.SaveState(values, fixeds);
+        SaveManager.Instance.SaveState(values, fixeds, corrects);
+
+        //게임 시간 저장 추가
+        if (GameManager.Instance != null && GameManager.Instance.gameTimer != null)
+        {
+            float elapsedTime = GameManager.Instance.gameTimer.GetElapsedTime();
+            PlayerPrefs.SetFloat("LastElapsedTime", elapsedTime);
+            PlayerPrefs.Save();
+        }
+
+        PlayerPrefs.SetInt("HintCount", GameManager.Instance.currentHintCount);
+
     }
 }

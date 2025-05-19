@@ -70,3 +70,9 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# Unity Ads 및 Google Services (민감 정보 보호)
+/Assets/Resources/unityads-settings.json
+/Assets/StreamingAssets/google-services.json
+*.keystore
+.env

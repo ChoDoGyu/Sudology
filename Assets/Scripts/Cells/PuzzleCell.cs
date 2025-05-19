@@ -55,4 +55,13 @@ public class PuzzleCell : MonoBehaviour, IPointerClickHandler
         var img = transform.Find("Background").GetComponent<UnityEngine.UI.Image>();
         img.color = c;
     }
+
+    public void SetValue(string number)
+    {
+        cellText.text = number;
+        if (!isFixed)
+        {
+            PuzzleValidator.Instance?.CheckIfPuzzleCompleted();
+        }
+    }
 }

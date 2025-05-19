@@ -17,7 +17,7 @@ public class DifficultySelector : MonoBehaviour
         //새 난이도 설정
         GameManager.Instance.SetDifficulty(diff);
 
-        //게임 씬으로 이동
-        SceneManager.LoadScene("GameScene");
+        //GameManager 흐름을 통해 GameScene 진입 + isNewGame 설정
+        GameManager.Instance.StartNewGame();
     }
 }
