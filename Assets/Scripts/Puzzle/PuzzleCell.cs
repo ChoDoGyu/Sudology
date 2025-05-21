@@ -43,11 +43,11 @@ public class PuzzleCell : MonoBehaviour, IPointerClickHandler
     {
         if (isFixed)
         {
-            Debug.Log("¿Ã ºø¿∫ πÆ¡¶ ºø¿Ã∂Û ºˆ¡§ ∫“∞°");
+            //Debug.Log("¿Ã ºø¿∫ πÆ¡¶ ºø¿Ã∂Û ºˆ¡§ ∫“∞°");
             return;
         }
         InputManager.Instance.SelectCell(this);
-        Debug.Log($"{name} ºø º±≈√µ ");
+        //Debug.Log($"{name} ºø º±≈√µ ");
     }
 
     public void SetBackgroundColor(Color c)

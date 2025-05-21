@@ -7,25 +7,21 @@ using System.Linq;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance;
+    public static GameManager Instance { get; private set; }
 
     [Header("Puzzle Generator")]
     // IPuzzleGenerator 인터페이스로 변환하여, 난이도까지 받아 처리하도록 구현
-    public IPuzzleGenerator puzzleGenerator;
-    public Transform puzzleParent;
-    public int gridSize = 9;
+    [SerializeField] private IPuzzleGenerator puzzleGenerator;
+    [SerializeField] private Transform puzzleParent;
+    [SerializeField] private int gridSize = 9;
 
     [Header("Game Settings")]
     public Difficulty difficulty = Difficulty.Normal;
 
-    [SerializeField] 
     public GameTimer gameTimer;
+    [SerializeField] private HintManager hintManager;
 
-    [HideInInspector]
-    public int currentHintCount = 0;
-
-    [HideInInspector]
-    public bool isNewGame = false;
+    private bool isNewGame = false;
 
     private void Awake()
     {
@@ -33,7 +29,6 @@ public class GameManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            // 씬 전환 시 콜백
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
         else Destroy(gameObject);
@@ -41,181 +36,126 @@ public class GameManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
+        if (Instance == this)
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
     }
 
-    // 씬이 로드될 때마다 호출됩니다.
+    // 씬 로드 시 퍼즐 초기화/불러오기
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (scene.name == "GameScene")
         {
-            gameTimer = FindObjectOfType<GameTimer>();
+            // 퍼즐 관련 오브젝트 자동 연결 (GameScene에 존재해야 함)
+            if (puzzleGenerator == null)
+                puzzleGenerator = FindObjectOfType<PuzzleGenerator>();
+            if (puzzleParent == null)
+                puzzleParent = GameObject.Find("PuzzleBoard")?.transform;
             if (gameTimer == null)
-            {
-                Debug.LogError("[GameManager] GameTimer를 찾지 못했습니다.");
-            }
-            else
-            {
-                Debug.Log("[GameManager] GameTimer 연결 성공");
-            }
-
-            var boardGO = GameObject.Find("PuzzleBoard");
-            if (boardGO == null) { Debug.LogError("PuzzleBoard 없음"); return; }
-
-            puzzleParent = boardGO.transform;
-            puzzleGenerator = boardGO.GetComponent<IPuzzleGenerator>();
-            if (puzzleGenerator == null) { Debug.LogError("PuzzleGenerator 없음"); return; }
-
-            //여기서 항상 셀 오브젝트부터 만든다 (단, 값은 비워둠)
-            puzzleGenerator.Generate(puzzleParent, gridSize, difficulty);
+                gameTimer = FindObjectOfType<GameTimer>();
+            if (hintManager == null)
+                hintManager = FindObjectOfType<HintManager>();
 
             if (isNewGame)
-                GenerateNewPuzzle();
-            else
-                LoadSavedPuzzle();
-        }
-        else
-        {
-            // GameScene이 아닌 씬으로 나갈 때는 타이머 강제 정지
-            if (gameTimer != null)
             {
-                float time = gameTimer.StopTimer();
-                PlayerPrefs.SetFloat("LastElapsedTime", time);
-                PlayerPrefs.Save();
-                Debug.Log($"[GameManager] GameScene 이탈 - 타이머 멈춤 및 시간 저장: {time}초");
+                StartNewGameInternal();
+            }
+            else
+            {
+                LoadSavedGameInternal();
             }
         }
     }
 
-    /// <summary>
-    /// 난이도를 설정합니다. 
-    /// DifficultySelector에서 호출됨.
-    /// </summary>
-    public void SetDifficulty(Difficulty d)
+    // 새 게임 시작(난이도 지정)
+    public void SetDifficulty(Difficulty diff)
     {
-        difficulty = d;
-    }
-
-    private void GenerateNewPuzzle()
-    {
-        var newCells = puzzleParent.GetComponentsInChildren<PuzzleCell>();
-
-
-        // 이름순 정렬 (항상 좌상단 → 우하단)
-        var orderedCells = newCells.OrderBy(cell => cell.name).ToArray();
-
-        // 퍼즐 데이터 생성
-        int[,] values = new int[9, 9];
-        bool[,] fixeds = new bool[9, 9];
-        int[,] corrects = (puzzleGenerator as PuzzleGenerator)?.GetCorrectValues();
-
-        // 셀에 값 적용 및 데이터 배열 생성
-
-        for (int i = 0; i < orderedCells.Length; i++)
-        {
-            int r = i / 9, c = i % 9;
-            var cell = orderedCells[i];
-            values[r, c] = string.IsNullOrEmpty(cell.cellText.text) ? 0 : int.Parse(cell.cellText.text);
-            fixeds[r, c] = cell.isFixed;
-            // corrects는 PuzzleGenerator에서 반환된 값 그대로 사용
-        }
-
-        // **여기서 퍼즐 저장!**
-        SaveManager.Instance.SaveState(values, fixeds, corrects);
-        PlayerPrefs.SetFloat("LastElapsedTime", 0f);
-        PlayerPrefs.SetInt("HintCount", 0);
-        PlayerPrefs.Save();
-
-        currentHintCount = 0;
-        gameTimer?.StartTimer();
-
-        Debug.Log("[GameManager] 새 퍼즐 생성 및 즉시 저장 완료");
-    }
-
-    private void LoadSavedPuzzle()
-    {
-        var saved = SaveManager.Instance.LoadState();
-
-        if (saved == null)
-        {
-            Debug.LogWarning("저장된 게임이 없어 새 퍼즐을 생성합니다.");
-            return;
-        }
-
-        var cells = puzzleParent.GetComponentsInChildren<PuzzleCell>();
-        //절대 퍼즐 셀을 다시 Generate 하지 마세요.
-        if (cells.Length == 0)
-        {
-            Debug.LogError("퍼즐 셀이 존재하지 않습니다. LoadSavedPuzzle 실패!");
-            return;
-        }
-
-        for (int i = 0; i < cells.Length; i++)
-        {
-            cells[i].isFixed = saved.fixeds[i];
-            cells[i].cellText.text = saved.values[i] == 0 ? "" : saved.values[i].ToString();
-            cells[i].correctValue = saved.corrects[i];
-            cells[i].ResetColor();
-        }
-
-        float resumeTime = PlayerPrefs.GetFloat("LastElapsedTime", 0f);
-        gameTimer?.ResumeFrom(resumeTime);
-        currentHintCount = PlayerPrefs.GetInt("HintCount", 0);
-
-        Debug.Log("[GameManager] 저장된 퍼즐 불러오기 완료");
-    }
-
-    /// <summary>
-    /// Continue 버튼에서 호출됩니다.
-    /// 저장된 게임이 없으면 경고만 띄우고, 있으면 GameScene으로 전환합니다.
-    /// </summary>
-    public void StartContinueGame()
-    {
-        isNewGame = false;
-        // GameScene 로드 → OnSceneLoaded 콜백에서 퍼즐 & 상태 동기화가 일어납니다.
-        SceneManager.LoadScene("GameScene");
+        difficulty = diff;
     }
 
     public void StartNewGame()
     {
         isNewGame = true;
-        SceneManager.LoadScene("GameScene");  // GameScene으로 이동
+        SceneManager.LoadScene("GameScene");
     }
 
+    private void StartNewGameInternal()
+    {
+        // 퍼즐 생성
+        puzzleGenerator.Generate(puzzleParent, gridSize, difficulty);
+
+        // 힌트/타이머 리셋
+        if (hintManager != null) hintManager.ResetHintCount();
+        if (gameTimer != null)
+        {
+            gameTimer.ResetTimer();
+            gameTimer.StartTimer();
+        }
+    }
+
+    // 저장된 게임 불러오기
+    public void SetContinueGame()
+    {
+        isNewGame = false;
+        SceneManager.LoadScene("GameScene");
+    }
+
+    private void LoadSavedGameInternal()
+    {
+        int[,] values; bool[,] fixeds; int[,] corrects; int hintCount; float elapsedTime;
+        if (SaveManager.Instance.LoadState(out values, out fixeds, out corrects, out hintCount, out elapsedTime))
+        {
+            // 퍼즐판 구성 (puzzleGenerator에 "복원용 생성" 기능이 있어야 함)
+            puzzleGenerator.GenerateFromState(puzzleParent, gridSize, difficulty, values, fixeds, corrects);
+
+            // 힌트/타이머 복원
+            if (hintManager != null) hintManager.SetHintCount(hintCount);
+            if (gameTimer != null)
+            {
+                gameTimer.SetElapsedTime(elapsedTime);
+                gameTimer.StartTimer();
+            }
+        }
+        else
+        {
+            // 저장 데이터가 없으면 새 게임으로
+            Debug.LogWarning("[GameManager] 저장된 데이터 없음, 새 게임 시작");
+            StartNewGameInternal();
+        }
+    }
+
+    // 저장 호출 (예: 씬 이동/일시정지/임시저장 등)
+    public void SaveCurrentState()
+    {
+        int[,] values = new int[9, 9];
+        bool[,] fixeds = new bool[9, 9];
+        int[,] corrects = new int[9, 9];
+
+        var cells = puzzleParent.GetComponentsInChildren<PuzzleCell>();
+        for (int i = 0; i < cells.Length; i++)
+        {
+            int r = i / 9;
+            int c = i % 9;
+            string text = cells[i].cellText != null ? cells[i].cellText.text : "";
+            values[r, c] = int.TryParse(text, out int v) ? v : 0;
+            fixeds[r, c] = cells[i].isFixed;
+            corrects[r, c] = cells[i].correctValue;
+        }
+
+        int hintCount = hintManager != null ? hintManager.GetHintCount() : 0;
+        float elapsedTime = gameTimer != null ? gameTimer.GetElapsedTime() : 0f;
+
+        SaveManager.Instance.SaveState(values, fixeds, corrects, hintCount, elapsedTime);
+    }
+
+    // 게임 클리어 시 통계 저장, UI 처리 등...
     public void CompleteGame()
     {
-        float finalTime = gameTimer.StopTimer();
-        Debug.Log("최종 소요 시간: " + finalTime + "초");
-        SaveGameTime(finalTime);
+        float clearTime = gameTimer != null ? gameTimer.GetElapsedTime() : 0f;
+        int hintCount = hintManager != null ? hintManager.GetHintCount() : 0;
 
-        //통계 업데이트
-        string difficultyKey = difficulty.ToString();  // ex: "Easy", "Normal", "Hard"
-
-        StatsData stats = StatsManager.Instance.LoadStats(difficultyKey);
-
-        // 클리어 횟수 증가
-        stats.clearCount++;
-
-        // 최단 시간 저장 (처음이거나, 이번 기록이 더 짧다면 갱신)
-        if (stats.bestTime <= 0 || finalTime < stats.bestTime)
-            stats.bestTime = finalTime;
-
-        // 평균 시간 계산
-        stats.avgTime = ((stats.avgTime * (stats.clearCount - 1)) + finalTime) / stats.clearCount;
-
-        // 평균 힌트 사용 횟수 계산
-        int hintsUsed = currentHintCount;
-        stats.avgHintUsage = ((stats.avgHintUsage * (stats.clearCount - 1)) + hintsUsed) / stats.clearCount;
-
-        StatsManager.Instance.SaveStats(difficultyKey, stats);  //저장
-
-        GameClearPanel.Instance.Show(finalTime);  // 결과창 띄우기
-    }
-
-    // JSON 또는 PlayerPrefs에 저장
-    private void SaveGameTime(float time)
-    {
-        PlayerPrefs.SetFloat("LastGameTime", time);
-        PlayerPrefs.Save();
+        StatsManager.Instance.UpdateStats(difficulty, clearTime, hintCount);
+        GameClearPanel.Instance.Show(clearTime);
     }
 }

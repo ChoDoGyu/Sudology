@@ -18,11 +18,20 @@ public class PuzzleGenerator : MonoBehaviour, IPuzzleGenerator
 
     private int[,] corrects = new int[9, 9];  // 정답 배열
 
+    // 퍼즐판/레이아웃 유효성 검사 (Unity 객체 파괴된 경우도 잡음)
+    private bool IsValid(UnityEngine.Object obj)
+    {
+        return obj != null;
+    }
+
     /// <summary>
     /// 난이도에 따라 퍼즐을 생성하는 기본 메서드
     /// </summary>
     public void Generate(Transform parent, int gridSize, Difficulty difficulty)
     {
+        // 퍼즐판 및 레이아웃 연결을 항상 최신으로 유지 (중요!)
+        EnsureBoardConnections();
+
         // 셀 크기 조정
         ResizeCells();
 
@@ -32,14 +41,13 @@ public class PuzzleGenerator : MonoBehaviour, IPuzzleGenerator
         // 2) 난이도 기반으로 힌트(고정 셀) 마스크 생성
         bool[,] mask = GenerateClueMask(solution, difficulty);
 
-
         // 3) PuzzleCell 인스턴스 생성 및 초기화
         for (int y = 0; y < gridSize; y++)
         {
             for (int x = 0; x < gridSize; x++)
             {
                 GameObject newCell = Instantiate(puzzleCellPrefab, parent);
-                newCell.name = $"PuzzleCell_{x}_{y}";
+                newCell.name = $"PuzzleCell_{y}_{x}";
                 PuzzleCell cellComp = newCell.GetComponent<PuzzleCell>();
                 int answer = solution[y, x];
 
@@ -63,12 +71,61 @@ public class PuzzleGenerator : MonoBehaviour, IPuzzleGenerator
             }
         }
 
-
         //정답 배열에 복사
         for (int y = 0; y < gridSize; y++)
             for (int x = 0; x < gridSize; x++)
                 corrects[y, x] = solution[y, x];
+    }
 
+
+    /// <summary>
+    /// 저장된 상태에서 퍼즐을 복원(불러오기)하는 함수
+    /// </summary>
+    public void GenerateFromState(Transform parent, int gridSize, Difficulty difficulty, int[,] values, bool[,] fixeds, int[,] corrects)
+    {
+        // 퍼즐판 및 레이아웃 연결을 항상 최신으로 유지 (중요!)
+        EnsureBoardConnections();
+
+        // 퍼즐판 사이즈 및 레이아웃 강제 적용
+        ResizeCells();
+
+        // 기존 퍼즐 셀 모두 제거
+        foreach (Transform child in parent)
+            Destroy(child.gameObject);
+
+        // 81개 셀 복원 생성 (순서 보장, 이름까지 일치)
+        for (int r = 0; r < 9; r++)
+        {
+            for (int c = 0; c < 9; c++)
+            {
+                var cellGO = Instantiate(puzzleCellPrefab, parent);
+                cellGO.name = $"PuzzleCell_{r}_{c}"; // 이름 일치
+                var cell = cellGO.GetComponent<PuzzleCell>();
+                int v = values[r, c];
+                cell.cellText.text = v > 0 ? v.ToString() : "";
+                cell.isFixed = fixeds[r, c];
+                cell.correctValue = corrects[r, c];
+            }
+        }
+    }
+
+    // 퍼즐판/레이아웃 연결 보장 함수
+    private void EnsureBoardConnections()
+    {
+        if (!IsValid(boardRect) || !IsValid(gridLayout))
+        {
+            var boardGO = GameObject.Find("PuzzleBoard");
+            if (boardGO != null)
+            {
+                boardRect = boardGO.GetComponent<RectTransform>();
+                gridLayout = boardGO.GetComponent<GridLayoutGroup>();
+            }
+        }
+        // 최종 유효성 체크 후 로그
+        if (!IsValid(boardRect) || !IsValid(gridLayout))
+        {
+            Debug.LogWarning("[PuzzleGenerator] boardRect 또는 gridLayout이 연결되어 있지 않습니다!");
+        }
     }
 
     //정답 배열 반환 (GameManager에서 저장용으로 사용)
@@ -91,6 +148,11 @@ public class PuzzleGenerator : MonoBehaviour, IPuzzleGenerator
     /// </summary>
     private void ResizeCells()
     {
+        if (boardRect == null || gridLayout == null)
+        {
+            Debug.LogWarning("[PuzzleGenerator] boardRect 또는 gridLayout이 연결되어 있지 않습니다!");
+            return;
+        }
         float boardW = boardRect.rect.width;
         float boardH = boardRect.rect.height;
         float spaceX = gridLayout.spacing.x;

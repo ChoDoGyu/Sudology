@@ -236,7 +236,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &8106181869274835180
 RectTransform:
   m_ObjectHideFlags: 0
@@ -308,6 +308,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6e02f51fb0fce24f82e350374c8df0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  bgmToggle: {fileID: 345470634678418274}
+  sfxToggle: {fileID: 3138945398669283590}
   panel: {fileID: 2382487038746972453}
 --- !u!1 &2974288518315208738
 GameObject:

@@ -10,14 +10,22 @@ public class GameTimer : MonoBehaviour
     private float elapsedTime;                    // 경과 시간
     private bool isGameRunning = false;           // 게임 실행 여부
 
-    // 게임 시작 시 호출
+    // SaveManager에서 불러온 값으로 초기화
+    public void SetElapsedTime(float time)
+    {
+        elapsedTime = time;
+    }
+    public float GetElapsedTime()
+    {
+        return elapsedTime;
+    }
+
     public void StartTimer()
     {
-        startTime = Time.time;    // 게임 시작 시간 기록
+        startTime = Time.time - elapsedTime; // 불러온 시간이 있으면 그만큼 보정
         isGameRunning = true;
     }
 
-    // 게임 종료 시 호출
     public float StopTimer()
     {
         isGameRunning = false;
@@ -39,17 +47,13 @@ public class GameTimer : MonoBehaviour
     {
         int minutes = Mathf.FloorToInt(time / 60);
         int seconds = Mathf.FloorToInt(time % 60);
-        timerText.text = $"{minutes:00}:{seconds:00}";
+        timerText.text = $"{minutes:D2}:{seconds:D2}";
     }
 
-    public void ResumeFrom(float seconds)
+    public void ResetTimer()
     {
-        elapsedTime = seconds;
-        isGameRunning = true;
+        elapsedTime = 0;
+        startTime = Time.time;
     }
 
-    public float GetElapsedTime()
-    {
-        return elapsedTime;
-    }
 }

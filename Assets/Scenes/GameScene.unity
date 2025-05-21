@@ -5301,7 +5301,7 @@ MonoBehaviour:
   gridSize: 9
   difficulty: 1
   gameTimer: {fileID: 1625767480}
-  currentHintCount: 0
+  hintManager: {fileID: 0}
 --- !u!4 &1877842455
 Transform:
   m_ObjectHideFlags: 0
@@ -6460,10 +6460,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42705e511e9bce749bbe99a6f8341593, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bgmSource: {fileID: 2579259083404288372}
   sfxSource: {fileID: 2180894251736595705}
-  bgmToggle: {fileID: 0}
-  sfxToggle: {fileID: 0}
+  bgmSource: {fileID: 2579259083404288372}
+  buttonSFX: {fileID: 8300000, guid: 19f89c6e740e7447f9e12a8310d3e973, type: 3}
 --- !u!4 &7940073245555799969
 Transform:
   m_ObjectHideFlags: 0

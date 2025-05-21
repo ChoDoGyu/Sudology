@@ -66,6 +66,6 @@ public class StartUIManager : MonoBehaviour
 
     private void OnContinue()
     {
-        GameManager.Instance.StartContinueGame(); //저장된 퍼즐 불러오기
+        GameManager.Instance.SetContinueGame(); //저장된 퍼즐 불러오기
     }
 }

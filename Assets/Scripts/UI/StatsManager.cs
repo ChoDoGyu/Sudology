@@ -3,6 +3,10 @@ using TMPro;
 using System.IO;
 using System.Collections.Generic;
 
+/// <summary>
+/// 난이도별 클리어 통계, 평균/최고 기록을 관리하는 싱글턴 매니저
+/// (씬 이동에도 살아남도록 DontDestroyOnLoad 적용)
+/// </summary>
 public class StatsManager : MonoBehaviour
 {
     public static StatsManager Instance { get; private set; }
@@ -21,34 +25,39 @@ public class StatsManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+            DontDestroyOnLoad(gameObject);  // 씬 이동에도 통계 매니저 유지
         }
         else
         {
-            Destroy(gameObject);
+            Destroy(gameObject); // 중복 방지
         }
     }
 
     private void Start()
     {
-        difficultyDropdown.onValueChanged.AddListener(_ => {
-            if (panel.activeSelf)
-                UpdateStatsUI();
-        });
+        if (difficultyDropdown != null)
+        {
+            difficultyDropdown.onValueChanged.AddListener(_ => {
+                if (panel != null && panel.activeSelf)
+                    UpdateStatsUI();
+            });
+        }
     }
 
     public void TogglePanel()
     {
+        if (panel == null) return;
+
         panel.SetActive(!panel.activeSelf);
+
         if (panel.activeSelf)
             UpdateStatsUI();
     }
 
     private void UpdateStatsUI()
     {
-        // 선택된 난이도 문자열
+        if (difficultyDropdown == null) return;
         string difficulty = difficultyDropdown.options[difficultyDropdown.value].text;
-
-        // JSON 파일에서 해당 난이도의 통계 불러오기
         StatsData stats = LoadStats(difficulty);
 
         clearCountText.text = $"Clear Count ({difficulty}): {stats.clearCount}";
@@ -71,16 +80,11 @@ public class StatsManager : MonoBehaviour
 
         if (File.Exists(statsFilePath))
         {
-            // JSON 파일을 읽고 StatsData 객체로 변환
             string json = File.ReadAllText(statsFilePath);
             Dictionary<string, StatsData> allStats = JsonUtility.FromJson<Wrapper<Dictionary<string, StatsData>>>(json).data;
 
-            if (allStats.ContainsKey(difficulty))
+            if (allStats != null && allStats.ContainsKey(difficulty))
                 stats = allStats[difficulty];
-        }
-        else
-        {
-            Debug.Log("No save data found. Using default values.");
         }
 
         return stats;
@@ -91,18 +95,51 @@ public class StatsManager : MonoBehaviour
     {
         Dictionary<string, StatsData> allStats = new Dictionary<string, StatsData>();
 
-        // 파일이 있다면 기존 데이터 읽기
         if (File.Exists(statsFilePath))
         {
             string json = File.ReadAllText(statsFilePath);
             allStats = JsonUtility.FromJson<Wrapper<Dictionary<string, StatsData>>>(json).data;
         }
 
-        // 데이터 갱신
         allStats[difficulty] = stats;
 
-        // JSON 형식으로 변환하여 파일에 저장
         string jsonData = JsonUtility.ToJson(new Wrapper<Dictionary<string, StatsData>> { data = allStats }, true);
         File.WriteAllText(statsFilePath, jsonData);
+    }
+
+    /// <summary>
+    /// GameManager 등에서 호출 (난이도, 시간, 힌트 사용 횟수)
+    /// </summary>
+    public void UpdateStats(Difficulty difficulty, float clearTime, int hintCount)
+    {
+        string diffStr = difficulty.ToString();
+
+        // 1. 기존 통계 불러오기
+        StatsData stats = LoadStats(diffStr);
+
+        // 2. 클리어 횟수 증가
+        stats.clearCount++;
+
+        // 3. 최고 기록(최소 시간) 갱신
+        if (stats.bestTime <= 0f || (clearTime > 0 && clearTime < stats.bestTime))
+            stats.bestTime = clearTime;
+
+        // 4. 평균 시간 갱신 (산술평균)
+        if (stats.clearCount == 1)
+            stats.avgTime = clearTime;
+        else
+            stats.avgTime = ((stats.avgTime * (stats.clearCount - 1)) + clearTime) / stats.clearCount;
+
+        // 5. 평균 힌트 사용 횟수 갱신
+        if (stats.clearCount == 1)
+            stats.avgHintUsage = hintCount;
+        else
+            stats.avgHintUsage = ((stats.avgHintUsage * (stats.clearCount - 1)) + hintCount) / stats.clearCount;
+
+        // 6. 저장
+        SaveStats(diffStr, stats);
+
+        // 7. 필요시 UI 갱신
+        UpdateStatsUI();
     }
 }

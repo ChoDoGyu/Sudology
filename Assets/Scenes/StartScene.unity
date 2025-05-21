@@ -1294,7 +1294,7 @@ MonoBehaviour:
   gridSize: 9
   difficulty: 1
   gameTimer: {fileID: 0}
-  currentHintCount: 0
+  hintManager: {fileID: 0}
   isNewGame: 0
 --- !u!4 &940232773
 Transform:
@@ -3273,17 +3273,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 7907481627188208554}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &485073025912917251 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 345470634678418274, guid: 04d2d1c5a9e67054c9525bdf9aa663f3, type: 3}
-  m_PrefabInstance: {fileID: 8464488991054884280}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &599791156078453186
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3459,11 +3448,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42705e511e9bce749bbe99a6f8341593, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bgmSource: {fileID: 5428679131296384316}
   sfxSource: {fileID: 8564090934131628209}
-  bgmToggle: {fileID: 485073025912917251}
-  sfxToggle: {fileID: 1971888078692150206}
-  clickSound: {fileID: 8300000, guid: 19f89c6e740e7447f9e12a8310d3e973, type: 3}
+  bgmSource: {fileID: 5428679131296384316}
+  buttonSFX: {fileID: 8300000, guid: 19f89c6e740e7447f9e12a8310d3e973, type: 3}
 --- !u!224 &1007347222061705299
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3809,17 +3796,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 385796509267133619}
   m_CullTransparentMesh: 1
---- !u!114 &1971888078692150206 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3138945398669283590, guid: 04d2d1c5a9e67054c9525bdf9aa663f3, type: 3}
-  m_PrefabInstance: {fileID: 8464488991054884280}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1976109484416016662
 GameObject:
   m_ObjectHideFlags: 0
@@ -5548,10 +5524,46 @@ PrefabInstance:
       propertyPath: m_Name
       value: SettingsPanel
       objectReference: {fileID: 0}
+    - target: {fileID: 2382487038746972453, guid: 04d2d1c5a9e67054c9525bdf9aa663f3, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3138945398669283590, guid: 04d2d1c5a9e67054c9525bdf9aa663f3, type: 3}
       propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 905808564498491731}
+    - target: {fileID: 3745851640578296596, guid: 04d2d1c5a9e67054c9525bdf9aa663f3, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3745851640578296596, guid: 04d2d1c5a9e67054c9525bdf9aa663f3, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3745851640578296596, guid: 04d2d1c5a9e67054c9525bdf9aa663f3, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 210
+      objectReference: {fileID: 0}
+    - target: {fileID: 3745851640578296596, guid: 04d2d1c5a9e67054c9525bdf9aa663f3, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -80
+      objectReference: {fileID: 0}
+    - target: {fileID: 7969781808290799865, guid: 04d2d1c5a9e67054c9525bdf9aa663f3, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7969781808290799865, guid: 04d2d1c5a9e67054c9525bdf9aa663f3, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7969781808290799865, guid: 04d2d1c5a9e67054c9525bdf9aa663f3, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 210
+      objectReference: {fileID: 0}
+    - target: {fileID: 7969781808290799865, guid: 04d2d1c5a9e67054c9525bdf9aa663f3, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -215
+      objectReference: {fileID: 0}
     - target: {fileID: 8106181869274835180, guid: 04d2d1c5a9e67054c9525bdf9aa663f3, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
